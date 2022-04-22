@@ -41,6 +41,24 @@ olympics = olympics[['Country', 'Year', 'id', 'Subtype', 'Post', 'Days']]
 #adding the panel data for different years
 years = np.arange(min(olympics['Year'].unique()), max(olympics['Year'].unique())+1, 1)
 
+for country in countries:
+    host_year = olympics[olympics.Country==country].Year.to_numpy()
+    host_id = olympics[olympics.Country==country].id.to_numpy()[0]
+    host_type = olympics[olympics.Country==country].Subtype.to_numpy()[0]
+
+    for year in years:
+        if host_year > year:
+            olympics = olympics.append({'Country': country, 'Year': year, 'id': host_id, 'Subtype': host_type, 'Post': 0}, ignore_index=True)
+
+        elif host_year < year:
+            olympics = olympics.append({'Country': country, 'Year': year, 'id': host_id, 'Subtype': host_type, 'Post': 1}, ignore_index=True)
+
+        else:
+            idx = olympics.loc[(olympics.Country==country) & (olympics.Year==year)].index
+            if olympics['Subtype'][idx].to_numpy()[0] == 1:
+                olympics['Post'][idx] = (366-olympics['Days'][idx].to_numpy()[0])/366
+            else:
+                olympics['Post'][idx] = (365-olympics['Days'][idx].to_numpy()[0])/365
 		
 #adding the needed variables 
 gdpc = pd.read_csv('Downloads/data/gdpc.csv')
@@ -76,7 +94,6 @@ for country in countries:
         idx = olympics.loc[(olympics.Country==country) & (olympics.Year==year)].index
         olympics['PolitStability'][idx] = polit[(polit['Country Name']==country)&(polit['Series Name']=='Political Stability and Absence of Violence/Terrorism: Estimate')]['{0} [YR{0}]'.format(year)].to_numpy()[0]
         
-
 olympics = olympics.sort_values(by=['id', 'Year'])
 
 # saving the data 
